@@ -1,0 +1,898 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROSALES Financial Services Pvt Ltd | HRMS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5fb;color:#172b4d}
+header{background:#102b53;color:white;padding:20px}
+.brand{font-size:23px;font-weight:800}
+.sub{font-size:12px;color:#b9cce6;margin-top:5px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;border-radius:16px;padding:24px;margin-bottom:18px;box-shadow:0 5px 20px #152b4510}
+.login{max-width:430px;margin:45px auto}
+h1{font-size:26px;margin-top:0}
+h2{font-size:21px}
+label{display:block;font-weight:bold;margin:16px 0 7px}
+input,textarea,select{width:100%;padding:13px;border:1px solid #ccd5e3;border-radius:9px;font-size:15px}
+button{background:#1457a3;color:white;border:0;border-radius:9px;padding:13px 17px;font-weight:bold;cursor:pointer;margin:5px 5px 5px 0}
+button.secondary{background:#e7eef8;color:#153a6b}
+button:disabled{opacity:.55}
+.hidden{display:none!important}
+.muted{color:#64748b}
+.error{color:#b42318;white-space:pre-wrap}
+.success{color:#167447}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}
+.tile{background:#f4f7fc;padding:20px;border-radius:12px;border:1px solid #e0e7f2}
+.tile strong{display:block;margin-top:14px;font-size:20px}
+nav{margin:15px 0}
+nav button{font-size:13px}
+.section{display:none}
+.section.active{display:block}
+.small{font-size:13px}
+.request-status{display:inline-block;padding:5px 11px;border-radius:20px;font-weight:bold;font-size:12px;background:#e9eef6;color:#34465d}.request-status.approved{background:#dcfce7;color:#166534}.request-status.rejected{background:#fee2e2;color:#991b1b}.request-status.pending{background:#fef3c7;color:#92400e}.request-row{border:1px solid #e0e7f2;border-radius:12px;padding:15px;margin:10px 0;background:#f8fafc}.request-row p{margin:7px 0}footer{text-align:center;padding:25px;color:#718096;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="brand">PROSALES Financial Services Pvt Ltd</div>
+<div class="sub">FINANCIAL SERVICES PVT LTD | HUMAN RESOURCE MANAGEMENT</div>
+</header>
+
+<main>
+<section id="loginPage" class="card login">
+<h1>Employee Portal</h1>
+<p class="muted">Secure HR & Employee Sign In</p>
+
+<label>Email</label>
+<input id="email" type="email" placeholder="Registered email">
+
+<label>Password</label>
+<input id="password" type="password" placeholder="Password">
+
+<button id="loginButton" onclick="login()">Sign In</button>
+<p id="loginMessage" class="error small"></p>
+<p class="muted small">Only authorised employees can access this portal.</p>
+</section>
+
+<section id="appPage" class="hidden">
+<div class="card">
+<h1 id="welcome">Welcome</h1>
+<p id="identity" class="muted"></p>
+<button class="secondary" onclick="logout()">Logout</button>
+</div>
+
+<nav id="navigation"></nav>
+
+<div id="overview" class="section active">
+<div class="card">
+<h2>Dashboard Overview</h2>
+<div class="grid">
+<div class="tile">My Profile<strong id="profileValue">—</strong></div>
+<div class="tile">Attendance<strong id="attendanceSummary">Not recorded</strong></div>
+<div class="tile">Leave Balance<strong>Not configured</strong></div>
+<div class="tile" id="overviewSalaryTile">Salary<strong>Restricted</strong></div>
+</div>
+</div>
+</div>
+
+
+<div id="viewerDirectory" class="section"><div class="card"><h2>Employee Directory</h2><p class="muted">Administrator · Employee information</p><button type="button" onclick="loadViewerDirectory()">Refresh Directory</button><p id="viewerDirectoryStatus" aria-live="polite"></p><div id="viewerDirectoryList"></div></div></div><div id="viewerAttendance" class="section"><div class="card"><h2>Attendance Reports</h2><button type="button" onclick="loadViewerAttendance()">Refresh Attendance</button><p id="viewerAttendanceStatus"></p><div id="viewerAttendanceList"></div></div></div><div id="viewerLeaves" class="section"><div class="card"><h2>Leave Reports</h2><button type="button" onclick="loadViewerLeaves()">Refresh Leaves</button><p id="viewerLeavesStatus"></p><div id="viewerLeavesList"></div></div></div><div id="viewerPerformance" class="section"><div class="card"><h2>Target & Achievement Reports</h2><button type="button" onclick="loadViewerPerformance()">Refresh Targets</button><p id="viewerPerformanceStatus"></p><div id="viewerPerformanceList"></div></div></div><div id="viewerSalary" class="section"><div class="card"><h2>Salary Reports</h2><p class="muted">Read-only employee salaries. HR and viewer salaries are excluded.</p><button type="button" onclick="loadViewerSalary()">Refresh Salaries</button><p id="viewerSalaryStatus"></p><div id="viewerSalaryList"></div><p class="muted"></p></div></div><div id="employees" class="section">
+  <div class="card">
+    <h2>Employee Management</h2>
+    <p class="muted">HR Employee Directory</p>
+    <button type="button" onclick="loadEmployees()">
+      Refresh Employee List
+    </button>
+    <p id="employeeStatus"></p>
+    <div id="employeeList"></div>
+  </div>
+</div>
+ 
+
+
+<div id="addEmployeeCard" class="card hidden">
+  
+  <h2>Add New Employee</h2>
+  <form id="addEmployeeForm">
+    <label>Employee ID</label>
+    <input id="newEmpId" required>
+
+    <label>Full Name</label>
+    <input id="newEmpName" required>
+
+    <label>Mobile Number</label>
+    <input id="newEmpMobile" type="tel">
+
+    <label>Email</label>
+    <input id="newEmpEmail" type="email">
+
+    <label>Department</label>
+    <input id="newEmpDepartment">
+
+    <label>Designation</label>
+    <input id="newEmpDesignation">
+
+    <label>Joining Date</label>
+    <input id="newEmpJoining" type="date">
+
+    <label>Monthly Salary</label>
+    <input id="newEmpSalary" type="number">
+
+    <button type="button" disabled>
+      Save Employee
+    </button>
+  </form>
+  <p class="muted small">
+    Saving will be enabled after secure database setup.
+  </p>
+</div>
+  
+
+
+
+
+
+<div id="attendance" class="section">
+<div class="card" id="attendanceRequestCard"><h2>Late Entry / Half-Day Request</h2><p class="muted small">Submit a request for HR review. This does not mark attendance automatically.</p><label>Request Type</label><select id="attendanceRequestType"><option value="late">Late Entry</option><option value="half_day">Half-Day</option><option value="remote">Remote Attendance</option></select><label>Date</label><input id="attendanceRequestDate" type="date"><label>Reason</label><textarea id="attendanceRequestReason" placeholder="Explain your request"></textarea><button type="button" id="attendanceRequestButton" onclick="submitAttendanceRequest()">Submit Request</button><p id="attendanceRequestMessage" aria-live="polite"></p></div>
+<div class="card">
+<h2>Attendance Management</h2>
+<p><b>Office:</b> Indo Japan House, J-1/12, EP Block, Sector V, Bidhannagar, Kolkata 700091 (3rd Floor)</p>
+<p><b>Check-in:</b> 10:45–10:59 AM on time; 11:00–11:59 AM late; from 12:00 PM half day.</p><p><b>Check-out window:</b> 6:15–6:30 PM IST</p>
+<p><b>Office radius:</b> 100 metres (verified against office server)</p><button class="secondary" type="button" onclick="checkGps()">Check My GPS Location</button><p id="gpsStatus" class="small muted" aria-live="polite"></p><p id="attendanceHistory" class="small muted"></p>
+<button id="officeCheckInButton" type="button" onclick="recordOfficeAttendance('in')">Office Check-In</button>
+<button id="officeCheckOutButton" type="button" onclick="recordOfficeAttendance('out')">Office Check-Out</button>
+<button class="secondary" type="button" onclick="document.getElementById('attendanceRequestType').value='remote';document.getElementById('attendanceRequestCard').scrollIntoView({behavior:'smooth',block:'start'})">Request Remote Attendance</button>
+<p class="muted small">Office attendance requires login, location permission and server-side GPS validation. Device GPS can be spoofed, so this is not tamper-proof proof of physical presence. Remote attendance requests require HR or ADM002 approval; submitting a request does not automatically record attendance.</p>
+</div>
+</div>
+
+
+<div id="leave" class="section">
+<div class="card">
+<h2>Leave Management</h2>
+<label>Leave Start Date</label>
+<input type="date" id="leaveStart">
+<label>Leave End Date</label>
+<input type="date" id="leaveEnd">
+<label>Reason</label>
+<textarea id="leaveReason" placeholder="Reason for leave"></textarea>
+<button type="button" onclick="submitLeave()" id="submitLeaveButton">Submit Leave Request</button><p id="leaveMessage" class="small" aria-live="polite"></p><h3>My Leave Requests</h3><div id="leaveHistory" class="small muted">Sign in to view requests.</div>
+<p class="muted small">Requests are sent for HR review. Approval and automatic leave marking are not yet active.</p>
+</div>
+</div>
+
+<div id="requests" class="section"><div class="card"><h2>My Requests &amp; Status</h2><p class="muted small">Track your Leave, Late Entry and Half-Day requests. HR decisions appear here after refresh.</p><button type="button" onclick="loadMyRequests()">Refresh My Status</button><p id="myRequestsMessage" class="small muted"></p><div id="myRequestsList"></div></div></div>
+
+<div id="salary" class="section">
+<div class="card">
+<h2>Salary & Payslips</h2>
+
+<p><b>Gross Salary:</b> <span id="salarySectionValue">Loading...</span></p>
+<p><b>Date of Joining:</b> <span id="joiningSectionValue">Loading...</span></p>
+  
+</div>
+</div>
+
+<div id="performance" class="section"><div class="card"><h2>Monthly Target &amp; Achievement</h2><label for="performanceMonth">Month</label><input id="performanceMonth" type="month" onchange="loadPerformance()"><p id="performanceStatus" class="muted" aria-live="polite"></p><div id="dailyPerformance"><h3>Daily &amp; Weekly Achievement</h3><p id="dailyPerformanceStatus" class="muted"></p><div id="weeklyPerformanceCards" class="grid"></div><h4>Daily Entries</h4><div id="dailyPerformanceList"></div></div><div id="performanceCards" class="grid"></div><div id="performanceAdmin" class="hidden"><h3>HR: Update Employee Performance</h3><h4>Daily Entry</h4><p class="muted">Select the employee in Monthly Target Setup below before saving a daily entry.</p><label>Entry Date</label><input id="dailyEntryDate" type="date"><label>Daily Amount Achieved (₹)</label><input id="dailyAmount" type="number" min="0" step="0.01"><label>Daily Sales Achieved</label><input id="dailySales" type="number" min="0" step="1"><button type="button" onclick="saveDailyPerformance()">Save Daily Entry</button><p id="dailySaveStatus" aria-live="polite"></p><hr><h4>Monthly Target Setup</h4><label>Employee</label><select id="performanceEmployee"></select><label>Amount Target (₹)</label><input id="targetAmount" type="number" min="0" step="0.01"><p class="muted">Amount Achieved is calculated automatically from Daily Entries.</p><input id="achievedAmount" type="hidden" value="0"><label>Sales Target (count)</label><input id="targetSales" type="number" min="0" step="1"><p class="muted">Sales Achieved is calculated automatically from Daily Entries.</p><input id="achievedSales" type="hidden" value="0"><button type="button" onclick="savePerformance()">Save Performance</button><p id="performanceSaveStatus" aria-live="polite"></p></div></div></div>
+<div id="incentives" class="section">
+<div class="card">
+<h2>Incentive Management</h2>
+<p class="muted">Monthly incentives and approval status will appear here.</p>
+</div>
+</div>
+
+<div id="documents" class="section">
+<div class="card">
+<h2>Employee Documents</h2>
+<p class="muted">Offer letters, joining documents and payslips will be available here after secure document storage is configured.</p>
+</div>
+</div>
+
+<div id="approvals" class="section">
+<div class="card">
+<h2>HR Approval Centre</h2>
+<p class="muted">Leave and attendance requests can be reviewed by authorized HR and ADM002 accounts. Decisions are recorded by secure server functions.</p><button type="button" onclick="loadHrLeaveRequests()">Refresh Leave Requests</button><p id="hrLeaveStatus" class="small muted"></p><div id="hrLeaveList"></div><hr><h2>Attendance Requests</h2><button type="button" onclick="loadHrAttendanceRequests()">Refresh Attendance Requests</button><p id="hrAttendanceStatus"></p><div id="hrAttendanceList"></div>
+</div>
+</div>
+</section>
+</main>
+
+<footer>© 2026 PROSALES Financial Services Pvt Ltd | HRMS Portal</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://dnqyngoeeftfbpjeullz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0NPAnLOJoEsaP3-8JdWJFw__6_tSvTd";
+
+let db = null;
+let currentUser = null;
+let currentRole = "employee";
+let canApproveRequests = false;
+
+function message(text){
+ document.getElementById("loginMessage").textContent=text;
+}
+
+function getClient(){
+ if(SUPABASE_KEY==="PASTE_YOUR_PUBLISHABLE_KEY_HERE"){
+  throw new Error("Supabase publishable key has not been added.");
+ }
+ if(!window.supabase){
+  throw new Error("Supabase library could not load.");
+ }
+ if(!db){
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+ }
+ return db;
+}
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(!email||!password){
+  message("Enter your email and password.");
+  return;
+ }
+ const button=document.getElementById("loginButton");
+ button.disabled=true;
+ message("");
+ try{
+  const client=getClient();
+  const {data,error}=await client.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  await loadUser(data.user);
+ }catch(err){
+  message(err.message||"Login failed.");
+ }finally{
+  button.disabled=false;
+ }
+}
+
+async function loadUser(user){
+ if(!user)throw new Error("No active session.");
+ const client=getClient();
+
+ // Default access is employee-only.
+ // HR access requires a verified role in the database.
+ const {data,error}=await client
+  .from("employees")
+  
+.select("employee_code,full_name,role,designation,department,date_of_joining,gross_salary")
+   
+  .eq("id",user.id)
+  .single();
+
+ if(error||!data){
+  await client.auth.signOut();
+  throw new Error("Employee profile not found or access denied. Contact HR.");
+ }
+
+ currentUser=user;
+ currentRole=data.role==="hr"?"hr":data.role==="viewer"?"viewer":"employee";
+ canApproveRequests=false;
+ try { const check=await client.rpc("can_approve_requests"); if(!check.error)canApproveRequests=check.data===true; } catch(e) { console.warn("Approval access check failed",e); }
+ document.getElementById("leave").classList.toggle("hidden",currentRole!=="employee");
+ document.getElementById("attendanceRequestCard").classList.toggle("hidden",currentRole!=="employee");
+
+document.getElementById("addEmployeeCard")
+  .classList.toggle("hidden", currentRole !== "hr");
+  
+ document.getElementById("loginPage").classList.add("hidden");
+ document.getElementById("appPage").classList.remove("hidden");
+ document.getElementById("welcome").textContent=
+  "Welcome, "+(data.full_name||"Employee");
+ document.getElementById("identity").textContent=
+  (data.employee_code||"")+
+  " | "+currentRole.toUpperCase()+
+  " | "+user.email;
+ document.getElementById("profileValue").textContent=
+  data.employee_code||"Employee";
+
+const salary = data.gross_salary == null
+  ? "Not available"
+  : "₹" + Number(data.gross_salary).toLocaleString("en-IN");
+
+const joining = data.date_of_joining
+  ? new Date(data.date_of_joining + "T00:00:00")
+      .toLocaleDateString("en-GB")
+  : "Not available";
+
+document.getElementById("salarySectionValue").textContent = salary;
+ document.getElementById("overviewSalaryTile").classList.toggle("hidden",currentRole!=="employee");
+document.getElementById("joiningSectionValue").textContent = joining;
+  
+ const modules=currentRole==="viewer"?[
+  ["overview","Dashboard"],["viewerDirectory","Employees"],["viewerAttendance","Attendance Reports"],["viewerLeaves","Leave Reports"],["viewerPerformance","Target Reports"],["viewerSalary","Salary Reports"]
+ ]:[
+  ["overview","Dashboard"],
+  ["attendance","Attendance"],
+  ...(currentRole==="hr"?[]:[["requests","My Requests & Status"]]),
+  ...(currentRole==="hr"?[]:[["leave","Leave"]]),
+  ...(currentRole==="employee"?[["salary","Salary"]]:[]),
+  ["performance","Targets & Achievement"],
+  ["incentives","Incentives"],
+  ["documents","Documents"]
+ ];
+
+ if(currentRole==="hr"){
+  modules.splice(1,0,["employees","Employees"]);
+  document.getElementById("leave").classList.add("hidden");
+ }
+ if(canApproveRequests)modules.push(["approvals","Approvals"]);
+
+ document.getElementById("navigation").innerHTML="";
+ modules.forEach(([id,label])=>{
+  const button=document.createElement("button");
+  button.className="secondary";
+  button.textContent=label;
+  button.onclick=()=>showSection(id);
+  document.getElementById("navigation").appendChild(button);
+ });
+ showSection("overview");
+ const istParts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit"}).formatToParts(new Date());
+ const year=istParts.find(p=>p.type==="year").value;
+ const month=istParts.find(p=>p.type==="month").value;
+ document.getElementById("performanceMonth").value=year+"-"+month;
+ document.getElementById("performanceAdmin").classList.toggle("hidden",currentRole!=="hr");
+ loadPerformance();
+ document.getElementById("dailyEntryDate").value=new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Kolkata"});
+ if(currentRole==="hr")loadPerformanceEmployees();
+ if(canApproveRequests){loadHrLeaveRequests();loadHrAttendanceRequests();}
+ if(currentRole==="viewer"){loadViewerDirectory();loadViewerAttendance();loadViewerLeaves();loadViewerPerformance();loadViewerSalary();}
+ loadMyLeaves();
+ loadMyAttendance();
+ if(currentRole==="employee")loadMyRequests();
+}
+
+
+
+function localDateValue(date){return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");}
+function mondayOf(dateStr){const d=new Date(dateStr+"T12:00:00");d.setDate(d.getDate()-((d.getDay()+6)%7));return localDateValue(d);}
+let performanceEmployeeNames={};
+function performanceEmployeeName(id){return performanceEmployeeNames[id]||document.querySelector('#performanceEmployee option[value="'+id+'"]')?.textContent||"Employee (name unavailable)";}
+async function loadDailyPerformance(){
+ const status=document.getElementById("dailyPerformanceStatus"),list=document.getElementById("dailyPerformanceList"),cards=document.getElementById("weeklyPerformanceCards");
+ list.replaceChildren();cards.replaceChildren();
+ const month=selectedPerformanceMonth();if(!/^\d{4}-\d{2}$/.test(month))return;
+ status.textContent="Loading daily and weekly entries…";
+ try{
+  let query=getClient().from("daily_performance").select("employee_id,entry_date,achieved_amount,achieved_sales").gte("entry_date",month+"-01").lt("entry_date",nextMonth(month)).order("entry_date",{ascending:false});
+  if(currentRole!=="hr")query=query.eq("employee_id",currentUser.id);
+  const {data,error}=await query;if(error)throw error;
+  const rows=data||[];
+  if(!rows.length){status.textContent="No daily entries for this month yet.";return;}
+  status.textContent="Daily entries and weekly totals (Monday–Sunday)";
+  const weekly=new Map();
+  for(const r of rows){
+   const week=mondayOf(r.entry_date),key=(currentRole==="hr"?r.employee_id+"|":"")+week;
+   const old=weekly.get(key)||{week,employee:r.employee_id,amount:0,sales:0};
+   old.amount+=Number(r.achieved_amount);old.sales+=Number(r.achieved_sales);weekly.set(key,old);
+   const p=document.createElement("p");p.className="request-row";
+   p.textContent=(currentRole==="hr"?(performanceEmployeeName(r.employee_id))+" · ":"")+r.entry_date+" — ₹"+Number(r.achieved_amount).toLocaleString("en-IN")+" | "+r.achieved_sales+" sales";
+   list.appendChild(p);
+  }
+  for(const w of [...weekly.values()].sort((a,b)=>b.week.localeCompare(a.week))){
+   const end=new Date(w.week+"T12:00:00");end.setDate(end.getDate()+6);
+   const label=w.week+" to "+localDateValue(end);
+   cards.append(performanceTile("Week "+label,"₹"+w.amount.toLocaleString("en-IN"),w.sales+" sales"+(currentRole==="hr"?" · "+(performanceEmployeeName(w.employee)):"")));
+  }
+ }catch(e){status.textContent="Daily tracking unavailable until database setup is completed: "+e.message;}
+}
+function nextMonth(month){const [y,m]=month.split("-").map(Number);return (m===12?y+1:y)+"-"+String(m===12?1:m+1).padStart(2,"0")+"-01";}
+async function saveDailyPerformance(){
+ const status=document.getElementById("dailySaveStatus");
+ if(currentRole!=="hr"){status.textContent="HR access required.";return;}
+ const employee_id=document.getElementById("performanceEmployee").value;
+ const entry_date=document.getElementById("dailyEntryDate").value;
+ const amount=document.getElementById("dailyAmount").value,sales=document.getElementById("dailySales").value;
+ if(!employee_id||!/^\d{4}-\d{2}-\d{2}$/.test(entry_date)||amount===""||sales===""||!Number.isFinite(Number(amount))||Number(amount)<0||!Number.isInteger(Number(sales))||Number(sales)<0){status.textContent="Select employee/date and enter valid daily amount and whole sales count.";return;}
+ status.textContent="Saving…";
+ try{
+  const {error}=await getClient().from("daily_performance").upsert({employee_id,entry_date,achieved_amount:Number(amount),achieved_sales:Number(sales)},{onConflict:"employee_id,entry_date"});
+  if(error)throw error;status.textContent="Daily entry saved. Same-date entries are replaced, not added twice.";await loadPerformance();
+ }catch(e){status.textContent="Not saved: "+e.message;}
+}
+
+function selectedPerformanceMonth(){
+ const el=document.getElementById("performanceMonth");
+ if(/^\d{4}-\d{2}$/.test(el.value))return el.value;
+ const parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit"}).formatToParts(new Date());
+ const year=parts.find(p=>p.type==="year")?.value;
+ const month=parts.find(p=>p.type==="month")?.value;
+ const fallback=year+"-"+month;
+ if(/^\d{4}-\d{2}$/.test(fallback))el.value=fallback;
+ return el.value;
+}
+function performanceTile(label,value,detail){
+ const tile=document.createElement("div");tile.className="tile";
+ const heading=document.createElement("span");heading.textContent=label;
+ const number=document.createElement("strong");number.textContent=value;
+ const small=document.createElement("p");small.className="small muted";small.textContent=detail;
+ tile.append(heading,number,small);return tile;
+}
+function performancePercent(achieved,target){return target>0?(achieved/target*100).toFixed(1)+"%":"Not set";}
+async function loadPerformance(){
+ if(!currentUser)return;
+ const status=document.getElementById("performanceStatus"),cards=document.getElementById("performanceCards");
+ cards.replaceChildren();status.textContent="Loading…";
+ const month=selectedPerformanceMonth();
+ if(!/^\d{4}-\d{2}$/.test(month)){status.textContent="Select a month.";return;}
+ try{
+  let query=getClient().from("monthly_performance").select("employee_id,target_amount,achieved_amount,target_sales,achieved_sales").eq("month",month+"-01");
+  if(currentRole!=="hr")query=query.eq("employee_id",currentUser.id);
+  const {data,error}=await query;
+  if(error)throw error;
+  let dailyQuery=getClient().from("daily_performance").select("employee_id,achieved_amount,achieved_sales").gte("entry_date",month+"-01").lt("entry_date",nextMonth(month));
+  if(currentRole!=="hr")dailyQuery=dailyQuery.eq("employee_id",currentUser.id);
+  const {data:dailyRows,error:dailyError}=await dailyQuery;
+  if(dailyError)throw dailyError;
+  const totals=new Map();
+  for(const d of dailyRows||[]){
+   const t=totals.get(d.employee_id)||{amount:0,sales:0};
+   t.amount+=Number(d.achieved_amount);t.sales+=Number(d.achieved_sales);totals.set(d.employee_id,t);
+  }
+  if(!data?.length){status.textContent="No target or achievement entered for this month.";await loadDailyPerformance();return;}
+  status.textContent=currentRole==="hr"?"Monthly team performance":"Your monthly performance";
+  for(const r of data){
+   const amountTarget=Number(r.target_amount),salesTarget=Number(r.target_sales);
+   const daily=totals.get(r.employee_id);
+   const amountDone=daily?daily.amount:0,salesDone=daily?daily.sales:0;
+   const section=document.createElement("div");section.style.gridColumn="1 / -1";
+   if(currentRole==="hr"){const p=document.createElement("p");p.textContent="Employee: "+performanceEmployeeName(r.employee_id);section.appendChild(p);}
+   const grid=document.createElement("div");grid.className="grid";
+   const money=n=>"₹"+n.toLocaleString("en-IN");
+   grid.append(performanceTile("Amount Target",money(amountTarget),"Achieved: "+money(amountDone)),performanceTile("Amount Achievement",performancePercent(amountDone,amountTarget),"Remaining: "+money(Math.max(0,amountTarget-amountDone))),performanceTile("Sales Target",String(salesTarget),"Achieved: "+salesDone),performanceTile("Sales Achievement",performancePercent(salesDone,salesTarget),"Remaining: "+Math.max(0,salesTarget-salesDone)));
+   section.appendChild(grid);const note=document.createElement("p");note.className="muted";note.textContent="Achievement calculated from saved daily entries"+(daily?"":" (no daily entries yet)")+".";section.appendChild(note);cards.appendChild(section);
+  }
+ await loadDailyPerformance();
+ }catch(e){status.textContent="Performance unavailable: "+e.message;await loadDailyPerformance();}
+}
+async function loadPerformanceEmployees(){
+ if(currentRole!=="hr")return;
+ const select=document.getElementById("performanceEmployee");
+ try{
+  const {data,error}=await getClient().from("employees").select("id,full_name,employee_code,role").order("full_name");
+  if(error)throw error;select.replaceChildren();
+  performanceEmployeeNames=Object.fromEntries((data||[]).map(e=>[e.id,(e.full_name||"Employee")+" ("+(e.employee_code||"—")+")"]));
+  for(const e of (data||[]).filter(e=>e.role!=="hr" && !/suprabhat/i.test(e.full_name||""))){const option=document.createElement("option");option.value=e.id;option.textContent=(e.full_name||"Employee")+" ("+(e.employee_code||"—")+")";select.appendChild(option);}
+  await loadPerformance();
+ }catch(e){document.getElementById("performanceSaveStatus").textContent="Employee list unavailable: "+e.message;}
+}
+async function savePerformance(){
+ const status=document.getElementById("performanceSaveStatus");
+ if(currentRole!=="hr"||!currentUser){status.textContent="HR access required.";return;}
+ const employee_id=document.getElementById("performanceEmployee").value,month=selectedPerformanceMonth();
+ const ids=["targetAmount","achievedAmount","targetSales","achievedSales"];
+ const vals=ids.map(id=>document.getElementById(id).value);
+ if(!employee_id){status.textContent="Please select an employee.";return;}
+ if(!/^\d{4}-\d{2}$/.test(month)){status.textContent="Month is invalid. Please select the month again.";return;}
+ if(vals.some(x=>x===""||!Number.isFinite(Number(x))||Number(x)<0)||!Number.isInteger(Number(vals[2]))||!Number.isInteger(Number(vals[3]))){status.textContent="Enter valid amounts and whole-number sales counts (zero is allowed).";return;}
+ status.textContent="Saving…";
+ try{
+  const {data:existing,error:readError}=await getClient().from("monthly_performance").select("achieved_amount,achieved_sales").eq("employee_id",employee_id).eq("month",month+"-01").maybeSingle();
+  if(readError)throw readError;
+  const {error}=await getClient().from("monthly_performance").upsert({employee_id,month:month+"-01",target_amount:Number(vals[0]),achieved_amount:existing?.achieved_amount??0,target_sales:Number(vals[2]),achieved_sales:existing?.achieved_sales??0},{onConflict:"employee_id,month"});
+  if(error)throw error;status.textContent="Performance saved.";await loadPerformance();
+ }catch(e){status.textContent="Not saved: "+e.message;}
+}
+
+function showSection(id){
+ document.querySelectorAll(".section").forEach(el=>{
+  el.classList.remove("active");
+ });
+ const target=document.getElementById(id);
+ if(target)target.classList.add("active");
+}
+
+async function logout(){
+ try{
+  if(db)await db.auth.signOut();
+ }finally{
+  currentUser=null;
+  currentRole="employee";
+  canApproveRequests=false;
+  document.getElementById("appPage").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
+  document.getElementById("password").value="";
+  message("");
+ }
+}
+
+async function restoreSession(){
+ try{
+  const client=getClient();
+  const {data,error}=await client.auth.getUser();
+  if(error||!data.user)return;
+  await loadUser(data.user);
+ }catch(err){
+  message(err.message||"Unable to restore session.");
+ }
+}
+async function loadEmployees() {
+  const status = document.getElementById("employeeStatus");
+  const list = document.getElementById("employeeList");
+  list.replaceChildren();
+
+  if (!currentUser || currentRole !== "hr") {
+    status.textContent = "HR access required.";
+    return;
+  }
+
+  status.textContent = "Loading employees...";
+
+  try {
+    const client = getClient();
+    const { data, error } = await client
+      .from("employees")
+      .select("*")
+      .order("employee_code");
+
+    if (error) throw error;
+
+    status.textContent = `${data.length} employee(s) found`;
+
+    
+data.forEach(emp => {
+  const item = document.createElement("div");
+  item.className = "tile";
+  item.style.marginBottom = "12px";
+
+  const fields = [
+    ["Employee Name", emp.full_name],
+    ["Employee ID", emp.employee_code],
+    ["Designation", emp.designation],
+    ["Department", emp.department],
+    ["Joining Date", emp.date_of_joining],
+    ["Gross Salary", emp.gross_salary == null
+      ? "Not available"
+      : "₹" + Number(emp.gross_salary).toLocaleString("en-IN")]
+  ];
+
+  fields.forEach(([label, value]) => {
+    const p = document.createElement("p");
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+    p.appendChild(strong);
+    p.appendChild(document.createTextNode(value ?? "Not available"));
+    item.appendChild(p);
+  });
+
+  list.appendChild(item);
+});
+    
+      
+      
+    
+  } catch (err) {
+    status.textContent = err.message;
+  }
+                            }
+ 
+
+function istDate(){
+ return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+}
+async function loadMyAttendance(){
+ const el=document.getElementById("attendanceHistory");
+ try{
+  const {data,error}=await getClient().from("office_attendance").select("attendance_date,status,check_in,check_out").eq("employee_id",currentUser.id).order("attendance_date",{ascending:false}).limit(10);
+  if(error)throw error;
+  const rows=data||[];
+  document.getElementById("attendanceSummary").textContent=rows.find(x=>x.attendance_date===istDate())?.status||"Not recorded";
+  el.replaceChildren();
+  const h=document.createElement("h3");h.textContent="My Recent Attendance";el.appendChild(h);
+  if(!rows.length){el.appendChild(document.createTextNode("No attendance records yet."));return;}
+  rows.forEach(x=>{const p=document.createElement("p");p.textContent=[x.attendance_date,x.status,x.check_in?"In: "+new Date(x.check_in).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}):"",x.check_out?"Out: "+new Date(x.check_out).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}):""].filter(Boolean).join(" | ");el.appendChild(p);});
+ }catch(e){el.textContent="Attendance unavailable: "+e.message;}
+}
+async function recordOfficeAttendance(action){
+ const status=document.getElementById("gpsStatus");
+ const inButton=document.getElementById("officeCheckInButton");
+ const outButton=document.getElementById("officeCheckOutButton");
+ if(!currentUser || currentRole==="viewer"){status.textContent="An employee or HR login is required.";return;}
+ if(!navigator.geolocation){status.textContent="GPS is unavailable on this device.";return;}
+ const button=action==="in"?inButton:outButton;
+ const rpc=action==="in"?"office_check_in":"office_check_out";
+ if(!window.confirm("Record your own office check-"+(action==="in"?"in":"out")+" now using your current GPS location?"))return;
+ inButton.disabled=true;outButton.disabled=true;
+ status.textContent="Getting fresh GPS location…";
+ try{
+  const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0}));
+  const {latitude,longitude,accuracy}=position.coords;
+  if(![latitude,longitude,accuracy].every(Number.isFinite) || accuracy>50)throw new Error("GPS accuracy must be within 50 metres. Move to an open area and retry.");
+  status.textContent="Validating location and recording attendance…";
+  const {data,error}=await getClient().rpc(rpc,{p_lat:latitude,p_lon:longitude,p_accuracy:accuracy});
+  if(error)throw error;
+  status.textContent="Attendance recorded: "+String(data||"Success");
+  await loadMyAttendance();
+ }catch(e){status.textContent="Attendance not confirmed: "+(e.message||"Location or server error");}
+ finally{inButton.disabled=false;outButton.disabled=false;}
+}
+function checkGps(){
+ const el=document.getElementById("gpsStatus");
+ if(!currentUser){el.textContent="Sign in to verify office location.";return;}
+ if(!navigator.geolocation){el.textContent="Geolocation is unavailable on this device.";return;}
+ el.textContent="Checking GPS with office server (permission required)…";
+ navigator.geolocation.getCurrentPosition(async p=>{
+  const {latitude,longitude,accuracy}=p.coords;
+  try{
+   const {data,error}=await getClient().rpc("verify_office_gps",{
+    p_latitude:latitude,p_longitude:longitude,p_accuracy:accuracy
+   });
+   if(error)throw error;
+   el.textContent=data===true
+    ?"Office GPS check passed. This does not record attendance or prove secure server-side location enforcement."
+    :"GPS verification failed: outside office radius or accuracy insufficient. Attendance not recorded.";
+  }catch(e){el.textContent="GPS verification unavailable: "+e.message+" Attendance not recorded.";}
+ },e=>{el.textContent="Location unavailable: "+e.message;},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+async function loadMyLeaves(){
+ const el=document.getElementById("leaveHistory");
+ if(!currentUser)return;
+ try{
+  const {data,error}=await getClient().from("leave_requests").select("start_date,end_date,reason,status,created_at").eq("employee_id",currentUser.id).order("created_at",{ascending:false}).limit(20);
+  if(error)throw error;
+  el.replaceChildren();
+  if(!data?.length){el.textContent="No leave requests yet.";return;}
+  data.forEach(x=>{const p=document.createElement("p");p.textContent=x.start_date+" to "+x.end_date+" — "+x.status+" — "+x.reason;el.appendChild(p);});
+ }catch(e){el.textContent="Unable to load leave requests: "+e.message;}
+}
+async function submitLeave(){
+ const msg=document.getElementById("leaveMessage"),btn=document.getElementById("submitLeaveButton");
+ const start=document.getElementById("leaveStart").value,end=document.getElementById("leaveEnd").value,reason=document.getElementById("leaveReason").value.trim();
+ if(!currentUser||currentRole!=="employee"){msg.textContent="Employee login required.";return;}
+ if(!start||!end||end<start||!reason){msg.textContent="Enter valid dates and a reason.";return;}
+ btn.disabled=true;msg.textContent="Submitting…";
+ try{
+  const {error}=await getClient().from("leave_requests").insert({employee_id:currentUser.id,start_date:start,end_date:end,reason,status:"pending"});
+  if(error)throw error;
+  msg.textContent="Request submitted for HR review (pending).";
+  document.getElementById("leaveReason").value="";
+  await loadMyLeaves();
+  await loadMyRequests();
+ }catch(e){msg.textContent="Request not submitted: "+e.message;}
+ finally{btn.disabled=false;}
+}
+
+
+function requestStatusLabel(status){
+ const s=String(status||"pending").toLowerCase();
+ return ["approved","rejected","pending"].includes(s)?s:"pending";
+}
+function appendMyRequest(container,type,date,status,reason){
+ const card=document.createElement("div");card.className="request-row";
+ const heading=document.createElement("strong");heading.textContent=type+" · "+date;card.appendChild(heading);
+ const p=document.createElement("p");const badge=document.createElement("span");
+ const normalized=requestStatusLabel(status);badge.className="request-status "+normalized;
+ badge.textContent=normalized.charAt(0).toUpperCase()+normalized.slice(1);
+ p.appendChild(document.createTextNode("Status: "));p.appendChild(badge);card.appendChild(p);
+ if(reason){const detail=document.createElement("p");detail.className="small muted";detail.textContent="Reason: "+reason;card.appendChild(detail);}
+ container.appendChild(card);
+}
+async function loadMyRequests(){
+ const msg=document.getElementById("myRequestsMessage"),list=document.getElementById("myRequestsList");
+ if(!msg||!list||!currentUser||currentRole==="hr")return;
+ list.replaceChildren();msg.textContent="Loading your requests…";
+ const all=[];
+ try{
+  const {data,error}=await getClient().from("leave_requests")
+   .select("start_date,end_date,reason,status,created_at")
+   .eq("employee_id",currentUser.id).order("created_at",{ascending:false}).limit(50);
+  if(error)throw error;
+  (data||[]).forEach(x=>all.push({type:"Leave",date:(x.start_date||"")+" to "+(x.end_date||""),status:x.status,reason:x.reason,created:x.created_at}));
+ }catch(e){msg.textContent="Leave requests unavailable: "+e.message;}
+ try{
+  const {data,error}=await getClient().from("attendance_requests")
+   .select("*").eq("employee_id",currentUser.id).limit(50);
+  if(error)throw error;
+  (data||[]).forEach(x=>{
+   const raw=String(x.request_type||x.type||x.attendance_type||x.requested_status||"").toLowerCase();
+   const type=raw.includes("half")?"Half-Day":raw.includes("late")?"Late Entry":raw.includes("remote")?"Remote Attendance":"Attendance Request";
+   all.push({type,date:String(x.request_date||x.attendance_date||x.date||x.created_at?.slice(0,10)||"Date unavailable"),status:x.status,reason:x.reason||x.notes||"",created:x.created_at});
+  });
+ }catch(e){
+  msg.textContent=(msg.textContent.startsWith("Leave requests unavailable")?msg.textContent+" | ":"")+"Attendance requests unavailable: "+e.message;
+ }
+ all.sort((a,b)=>String(b.created||"").localeCompare(String(a.created||"")));
+ if(!all.length){if(!msg.textContent.includes("unavailable"))msg.textContent="No requests submitted yet.";return;}
+ if(!msg.textContent.includes("unavailable"))msg.textContent=all.length+" request(s) found.";
+ all.forEach(x=>appendMyRequest(list,x.type,x.date,x.status,x.reason));
+}
+
+async function decideHrLeave(id,decision,actions){
+ if(!currentUser||!canApproveRequests||!["approved","rejected"].includes(decision))return;
+ if(!confirm("Confirm "+decision+" for this leave request?"))return;
+ const buttons=actions.querySelectorAll("button");
+ buttons.forEach(b=>b.disabled=true);
+ try{
+  const {error}=await getClient().rpc("approval_review_leave",{p_request_id:id,p_approve:decision==="approved"});
+  if(error)throw error;
+  await loadHrLeaveRequests();
+ }catch(e){
+  document.getElementById("hrLeaveStatus").textContent="Decision failed: "+e.message;
+  buttons.forEach(b=>b.disabled=false);
+ }
+}
+async function loadHrLeaveRequests(){
+ const status=document.getElementById("hrLeaveStatus"),list=document.getElementById("hrLeaveList");
+ list.replaceChildren();
+ if(!currentUser||!canApproveRequests){status.textContent="Approval access required.";return;}
+ status.textContent="Loading leave requests…";
+ try{
+  const {data,error}=await getClient().from("leave_requests").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error)throw error;
+  const rows=data||[];
+  status.textContent=rows.length+" leave request(s) found.";
+  if(!rows.length)return;
+  const ids=[...new Set(rows.map(x=>x.employee_id).filter(Boolean))];
+  let people=new Map();
+  if(ids.length){
+   const {data:emps,error:empError}=await getClient().from("employees").select("id,full_name,employee_code").in("id",ids);
+   if(empError){status.textContent+=" Employee names unavailable: "+empError.message;}
+   else people=new Map((emps||[]).map(e=>[e.id,e]));
+  }
+  rows.forEach(req=>{
+   const item=document.createElement("div");item.className="tile";item.style.marginBottom="10px";
+   const person=people.get(req.employee_id);
+   const entries=[["Employee Name",person?.full_name||"Name unavailable"],["Employee ID",person?.employee_code||req.employee_id],["Dates",(req.start_date||"")+" to "+(req.end_date||"")],["Status",req.status],["Reason",req.reason],["Submitted",req.created_at?new Date(req.created_at).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"}):""]];
+   entries.forEach(([name,value])=>{const p=document.createElement("p");const strong=document.createElement("strong");strong.textContent=name+": ";p.appendChild(strong);p.appendChild(document.createTextNode(String(value??"—")));item.appendChild(p);});
+   if(req.status==="pending"){
+    const actions=document.createElement("div");actions.style.display="flex";actions.style.gap="8px";actions.style.flexWrap="wrap";
+    for(const [label,decision] of [["Approve","approved"],["Reject","rejected"]]){
+     const btn=document.createElement("button");btn.type="button";btn.textContent=label;
+     if(decision==="rejected")btn.className="secondary";
+     btn.onclick=()=>decideHrLeave(req.id,decision,actions);
+     actions.appendChild(btn);
+    }
+    item.appendChild(actions);
+   }
+   list.appendChild(item);
+  });
+ }catch(e){status.textContent="Unable to load leave requests: "+e.message;}
+}
+
+async function submitAttendanceRequest(){
+ const msg=document.getElementById("attendanceRequestMessage"),btn=document.getElementById("attendanceRequestButton");
+ if(!currentUser||currentRole!=="employee"){msg.textContent="Employee login required.";return;}
+ const type=document.getElementById("attendanceRequestType").value;
+ const date=document.getElementById("attendanceRequestDate").value;
+ const reason=document.getElementById("attendanceRequestReason").value.trim();
+ if(!date||!reason){msg.textContent="Select a date and enter a reason.";return;}
+ btn.disabled=true;msg.textContent="Submitting…";
+ try{
+  const {error}=await getClient().from("attendance_requests").insert({employee_id:currentUser.id,request_date:date,requested_status:type,reason,status:"pending"});
+  if(error)throw error;
+  msg.textContent="Request submitted. Awaiting HR decision.";
+  document.getElementById("attendanceRequestReason").value="";
+  await loadMyRequests();
+ }catch(e){msg.textContent="Unable to submit: "+e.message;}
+ finally{btn.disabled=false;}
+}
+async function decideHrAttendance(id,decision){
+ if(!currentUser||!canApproveRequests||!["approved","rejected"].includes(decision))return;
+ if(!confirm("Confirm "+decision+" for this attendance request?"))return;
+ const msg=document.getElementById("hrAttendanceStatus");
+ try{
+  const {error}=await getClient().rpc("review_attendance_request",{p_request_id:id,p_approve:decision==="approved"});
+  if(error)throw error;
+  await loadHrAttendanceRequests();
+ }catch(e){msg.textContent="Decision failed: "+e.message;}
+}
+async function loadHrAttendanceRequests(){
+ const msg=document.getElementById("hrAttendanceStatus"),list=document.getElementById("hrAttendanceList");
+ if(!msg||!list||!currentUser||!canApproveRequests)return;
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  const {data,error}=await getClient().from("attendance_requests").select("id,employee_id,request_date,requested_status,reason,status,created_at").order("created_at",{ascending:false}).limit(100);
+  if(error)throw error;
+  const rows=data||[];msg.textContent=rows.length+" request(s) found.";
+  const ids=[...new Set(rows.map(x=>x.employee_id).filter(Boolean))];
+  let names=new Map();
+  if(ids.length){
+   const r=await getClient().from("employees").select("id,full_name,employee_code").in("id",ids);
+   if(!r.error)names=new Map((r.data||[]).map(x=>[x.id,x]));
+  }
+  rows.forEach(x=>{
+   const item=document.createElement("div");item.className="request-row";
+   const p=document.createElement("p"),person=names.get(x.employee_id);
+   p.textContent=(person?.full_name||"Employee")+" ("+(person?.employee_code||x.employee_id)+") | "+x.request_date+" | "+x.requested_status+" | "+x.status;
+   const detail=document.createElement("p");detail.textContent="Reason: "+x.reason;
+   item.append(p,detail);
+   if(x.status==="pending"){
+    for(const [label,decision] of [["Approve","approved"],["Reject","rejected"]]){
+     const b=document.createElement("button");b.type="button";b.textContent=label;
+     if(decision==="rejected")b.className="secondary";
+     b.onclick=()=>decideHrAttendance(x.id,decision);item.appendChild(b);
+    }
+   }
+   list.appendChild(item);
+  });
+ }catch(e){msg.textContent="Unable to load requests: "+e.message;}
+}
+
+function viewerRow(container,fields){
+ const item=document.createElement("div");item.className="request-row";
+ fields.forEach(([label,value])=>{const p=document.createElement("p");const b=document.createElement("strong");b.textContent=label+": ";p.append(b,document.createTextNode(String(value??"—")));item.appendChild(p);});
+ container.appendChild(item);
+}
+async function loadViewerDirectory(){
+ if(currentRole!=="viewer")return;
+ const msg=document.getElementById("viewerDirectoryStatus"),list=document.getElementById("viewerDirectoryList");
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  // This RPC must be installed with its restricted, column-limited SQL definition.
+  const {data,error}=await getClient().rpc("viewer_employee_directory");
+  if(error)throw error;
+  msg.textContent=(data||[]).length+" employees";
+  (data||[]).forEach(x=>viewerRow(list,[["Name",x.full_name],["Employee ID",x.employee_code],["Department",x.department],["Designation",x.designation],["Joining Date",x.date_of_joining]]));
+ }catch(e){msg.textContent="Directory unavailable: "+e.message;}
+}
+let viewerPeople=new Map();
+async function viewerNames(){
+ if(viewerPeople.size)return viewerPeople;
+ const {data,error}=await getClient().rpc("prosales_viewer_people");
+ if(error)throw error;
+ viewerPeople=new Map((data||[]).filter(x=>x.id).map(x=>[x.id,x]));
+ return viewerPeople;
+}
+function viewerIdentity(id,names){
+ const person=names.get(id);
+ return person?(person.full_name||"Employee")+" ("+(person.employee_code||"—")+")":"Employee (name unavailable)";
+}
+async function loadViewerPerformance(){
+ if(currentRole!=="viewer")return;
+ const msg=document.getElementById("viewerPerformanceStatus"),list=document.getElementById("viewerPerformanceList");
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  const names=await viewerNames();
+  const {data,error}=await getClient().rpc("prosales_viewer_targets");
+  if(error)throw error;
+  msg.textContent=(data||[]).length+" target records";
+  (data||[]).forEach(x=>viewerRow(list,[["Employee",viewerIdentity(x.employee_id,names)],["Month",x.month],["Amount Target",x.target_amount],["Amount Achieved",x.achieved_amount],["Sales Target",x.target_sales],["Sales Achieved",x.achieved_sales]]));
+ }catch(e){msg.textContent="Target reports unavailable: "+e.message;}
+}
+async function loadViewerSalary(){
+ if(currentRole!=="viewer")return;
+ const msg=document.getElementById("viewerSalaryStatus"),list=document.getElementById("viewerSalaryList");
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  const {data,error}=await getClient().rpc("prosales_viewer_salary");
+  if(error)throw error;
+  msg.textContent=(data||[]).length+" employee salaries";
+  (data||[]).forEach(x=>viewerRow(list,[["Name",x.full_name],["Employee ID",x.employee_code],["Designation",x.designation],["Gross Salary",x.gross_salary==null?"Not set":"₹"+Number(x.gross_salary).toLocaleString("en-IN")]]));
+ }catch(e){msg.textContent="Salary reports unavailable: "+e.message;}
+}
+async function loadViewerAttendance(){
+ if(currentRole!=="viewer")return;
+ const msg=document.getElementById("viewerAttendanceStatus"),list=document.getElementById("viewerAttendanceList");
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  const {data,error}=await getClient().from("office_attendance").select("employee_id,attendance_date,status,check_in,check_out").order("attendance_date",{ascending:false}).limit(100);
+  if(error)throw error;
+  const names=await viewerNames();
+  msg.textContent=(data||[]).length+" recent records";
+  (data||[]).forEach(x=>viewerRow(list,[["Employee",viewerIdentity(x.employee_id,names)],["Date",x.attendance_date],["Status",x.status],["Check-in",x.check_in],["Check-out",x.check_out]]));
+ }catch(e){msg.textContent="Attendance unavailable: "+e.message;}
+}
+async function loadViewerLeaves(){
+ if(currentRole!=="viewer")return;
+ const msg=document.getElementById("viewerLeavesStatus"),list=document.getElementById("viewerLeavesList");
+ list.replaceChildren();msg.textContent="Loading…";
+ try{
+  const {data,error}=await getClient().from("leave_requests").select("employee_id,start_date,end_date,status,reason").order("start_date",{ascending:false}).limit(100);
+  if(error)throw error;
+  const names=await viewerNames();
+  msg.textContent=(data||[]).length+" recent requests";
+  (data||[]).forEach(x=>viewerRow(list,[["Employee",viewerIdentity(x.employee_id,names)],["Dates",(x.start_date||"")+" to "+(x.end_date||"")],["Status",x.status],["Reason",x.reason]]));
+ }catch(e){msg.textContent="Leave reports unavailable: "+e.message;}
+}
+
+restoreSession();
+</script>
+</body>
+</html>
