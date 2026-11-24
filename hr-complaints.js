@@ -76,6 +76,21 @@
     }
 
     const { data, error } = await query;
+if (!error && staff() && data?.length) {
+  const ids = [...new Set(data.map(c => c.employee_id))];
+  const { data: employees } = await getClient()
+    .from("employees")
+    .select("id, full_name, employee_code")
+    .in("id", ids);
+
+  for (const c of data) {
+    const e = employees?.find(x => x.id === c.employee_id);
+    if (e) {
+      c.subject = e.full_name + " (" +
+        e.employee_code + ") — " + c.subject;
+    }
+  }
+}
     if (error) {
       notice("complaintNotice", error.message);
       return;
@@ -136,6 +151,9 @@
       " | Seen: " + (c.seen_at ? "Yes" : "No");
 
     $("complaintAdmin").classList.toggle("hidden", !staff());
+$("complaintStatus").disabled = !staff();
+$("complaintResolution").disabled = !staff();
+$("saveComplaintStatus").disabled = !staff();
     $("complaintStatus").value =
       c.status === "submitted" ? "seen" : c.status;
     $("complaintResolution").value = c.resolution || "";
